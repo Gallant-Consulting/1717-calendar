@@ -129,18 +129,24 @@ export function Calendar({ events, displayMonth, onDisplayMonthChange, onDayWith
             year: 'numeric',
           });
 
+          const visibleDots = dayEvents.slice(0, 3);
+          const hasOverflow = dayEvents.length > 3;
+
           const dots = (
             <span
               aria-hidden
-              className="pointer-events-none absolute bottom-0.5 left-1/2 flex max-w-[calc(100%-2px)] -translate-x-1/2 flex-wrap justify-center gap-0.5"
+              className="pointer-events-none absolute bottom-0.5 left-1/2 flex max-w-[calc(100%-2px)] -translate-x-1/2 items-center justify-center gap-0.5"
             >
-              {dayEvents.map((ev) => (
+              {visibleDots.map((ev) => (
                 <span
                   key={ev.id}
                   className="h-1.5 w-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: getScheduleAccentColor(ev, events) }}
                 />
               ))}
+              {hasOverflow && (
+                <span className="text-[8px] font-bold leading-none text-muted-foreground">+</span>
+              )}
             </span>
           );
 

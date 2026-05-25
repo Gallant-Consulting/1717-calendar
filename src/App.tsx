@@ -280,6 +280,18 @@ export default function App() {
               Greater Richmond Business{' '}
               <span style={{ color: SCHEDULE_PRIMARY_ACCENT }}>Events</span>
             </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Provided by the{' '}
+              <a
+                href="https://www.1717collective.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium hover:underline"
+                style={{ color: '#7d3cff' }}
+              >
+                1717 Collective
+              </a>
+            </p>
           </div>
 
           {/* Mobile: header → search/list → email → footer. Desktop: calendar + email | list. */}
@@ -294,7 +306,7 @@ export default function App() {
               <EmailSignup webhookUrl={SUBSCRIBE_WEBHOOK_URL} className="mt-4" />
             </aside>
 
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:col-start-2 lg:row-start-1 lg:h-full lg:min-h-0">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:col-start-2 lg:row-start-1 lg:h-full lg:min-h-0 lg:pt-[14px]">
               <EventList
                 events={filteredEvents}
                 accentSourceEvents={filteredEvents}
