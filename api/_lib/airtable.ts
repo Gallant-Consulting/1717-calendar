@@ -40,7 +40,6 @@ async function airtableFetch(url: string, init?: RequestInit): Promise<Response>
   });
 
   if (!response.ok) {
-    const body = await response.text();
     throw new Error(`Database request failed (${response.status}).`);
   }
 
