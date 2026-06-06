@@ -34,10 +34,10 @@ export function EmailSignup({ webhookUrl, className }: { webhookUrl: string; cla
         className,
       )}
     >
-      <p className="mb-4 text-xs font-medium text-foreground">Get upcoming events in your inbox</p>
+      <p className="mb-4 text-sm font-medium text-foreground">Get upcoming events in your inbox</p>
 
       {status === 'success' ? (
-        <p className="text-xs text-muted-foreground" role="status">
+        <p className="text-sm text-muted-foreground" role="status">
           You&apos;re subscribed. You can unsubscribe from the link in any email.
         </p>
       ) : (
@@ -59,10 +59,10 @@ export function EmailSignup({ webhookUrl, className }: { webhookUrl: string; cla
             }}
             aria-invalid={status === 'error'}
             aria-describedby={status === 'error' ? errorId : undefined}
-            className="text-sm"
+            className="text-base"
           />
           {status === 'error' ? (
-            <p id={errorId} className="text-[11px] text-destructive" role="alert">
+            <p id={errorId} className="text-xs text-destructive" role="alert">
               Couldn&apos;t subscribe. Try again.
             </p>
           ) : null}

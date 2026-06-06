@@ -220,7 +220,7 @@ export function EventList({
           onChange={(e) => onInputChange(e.target.value)}
           placeholder="Search for an event or group"
           aria-label="Search for an event or group"
-          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
         />
         {searchHasValue ? (
           <button

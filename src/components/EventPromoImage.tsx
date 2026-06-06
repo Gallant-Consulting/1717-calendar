@@ -18,6 +18,7 @@ type EventPromoImageProps = {
  */
 export function EventPromoImage({ src, alt, className, loading = 'lazy' }: EventPromoImageProps) {
   const [maxHeightClass, setMaxHeightClass] = useState<string>(DEFAULT_MAX_H);
+  const [didError, setDidError] = useState(false);
 
   const handleLoad = useCallback((e: SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
@@ -28,6 +29,12 @@ export function EventPromoImage({ src, alt, className, loading = 'lazy' }: Event
     }
   }, []);
 
+  const handleError = useCallback(() => {
+    setDidError(true);
+  }, []);
+
+  if (didError) return null;
+
   return (
     <div className={cn('flex w-full justify-center', className)}>
       {/* `inline-block` + `w-auto` image so the frame hugs the bitmap — no full-width pillarboxing */}
@@ -37,6 +44,7 @@ export function EventPromoImage({ src, alt, className, loading = 'lazy' }: Event
           alt={alt}
           loading={loading}
           onLoad={handleLoad}
+          onError={handleError}
           className={cn('block h-auto w-auto max-w-full object-contain', maxHeightClass)}
         />
       </div>

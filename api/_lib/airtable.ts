@@ -13,7 +13,7 @@ const AIRTABLE_API_ROOT = 'https://api.airtable.com/v0';
 function getEnv(name: 'AIRTABLE_PAT' | 'AIRTABLE_BASE_ID'): string {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+    throw new Error('Database can\'t be reached — server configuration error.');
   }
   return value;
 }
@@ -41,7 +41,7 @@ async function airtableFetch(url: string, init?: RequestInit): Promise<Response>
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Airtable request failed (${response.status}): ${body}`);
+    throw new Error(`Database request failed (${response.status}).`);
   }
 
   return response;

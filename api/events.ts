@@ -95,7 +95,12 @@ export default async function handler(request: Request): Promise<Response> {
 
     return text('Method not allowed', 405);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    // Log the real error server-side but return a generic message to the client
+    console.error('[events handler]', error);
+    const message =
+      error instanceof Error && error.message.startsWith('Database')
+        ? error.message
+        : "Database can't be reached.";
     return text(message, 500);
   }
 }

@@ -28,8 +28,9 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
     return { hasError: true, error };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   componentDidCatch(_error: Error, _errorInfo: React.ErrorInfo) {
-    // console.error('EventModal Error:', error, errorInfo);
+    // Intentionally empty – error state is handled via getDerivedStateFromError
   }
 
   render() {
@@ -280,14 +281,14 @@ export default function App() {
               Greater Richmond Business{' '}
               <span style={{ color: SCHEDULE_PRIMARY_ACCENT }}>Events</span>
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Provided by the{' '}
+            <p className="mt-1 text-base text-muted-foreground">
+              Provided by{' '}
               <a
                 href="https://www.1717collective.org/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium hover:underline"
-                style={{ color: '#7d3cff' }}
+                className="font-medium underline"
+                style={{ color: '#BC9DFF' }}
               >
                 1717 Collective
               </a>
@@ -336,7 +337,7 @@ export default function App() {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>
               Powered by{' '}
-              <a href="https://workgallantly.com" className="text-blue-400 hover:text-blue-300 underline transition-colors" target="_blank" rel="noopener noreferrer">Gallant</a>
+              <a href="https://workgallantly.com" className="underline transition-colors hover:opacity-80" style={{ color: '#BC9DFF' }} target="_blank" rel="noopener noreferrer">Gallant</a>
               &nbsp;&copy; {currentYear}
               
             </span>

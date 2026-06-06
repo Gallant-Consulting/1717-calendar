@@ -69,18 +69,12 @@ async function parseResponse<T>(response: Response): Promise<T> {
   const ct = response.headers.get('content-type') ?? '';
   const jsonByHeader = ct.includes('application/json') || ct.includes('text/json');
   if (!jsonByHeader && !looksLikeJsonPayload(text)) {
-    const hint =
-      text.trimStart().startsWith('<') || text.toLowerCase().includes('<!doctype')
-        ? ' The server returned HTML instead of JSON — is /api/events routed to the Node handler in production?'
-        : '';
-    throw new Error(
-      `Expected JSON from ${EVENTS_API_PATH} but got ${ct || 'unknown content-type'}.${hint}`,
-    );
+    throw new Error("Database can't be reached.");
   }
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new Error(`Invalid JSON from ${EVENTS_API_PATH}.`);
+    throw new Error("Database can't be reached.");
   }
 }
 
@@ -109,7 +103,7 @@ export async function getEventsPage(params?: {
   const response = await fetch(buildEventsGetUrl(params));
   const payload = await parseResponse<EventsPageDto>(response);
   if (!payload || !Array.isArray(payload.events)) {
-    throw new Error(`Invalid events page from ${EVENTS_API_PATH}.`);
+    throw new Error("Database can't be reached.");
   }
   return {
     events: payload.events.map(mapDtoToEvent),

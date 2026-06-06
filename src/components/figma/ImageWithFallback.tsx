@@ -6,11 +6,12 @@ const ERROR_IMG_SRC =
 export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElement>) {
   const [didError, setDidError] = useState(false)
 
-  const handleError = () => {
-    setDidError(true)
-  }
+  const { src, alt, style, className, onError: parentOnError, ...rest } = props
 
-  const { src, alt, style, className, ...rest } = props
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    setDidError(true)
+    parentOnError?.(e)
+  }
 
   return didError ? (
     <div

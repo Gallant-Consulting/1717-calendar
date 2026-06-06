@@ -1,7 +1,7 @@
 import type { Event } from '../types';
 
 /** Alternating accents for schedule list and calendar: pink → amber → cyan. */
-export const SCHEDULE_EVENT_ACCENT_COLORS = ['#E91E63', '#F5A623', '#00BCD4'] as const;
+export const SCHEDULE_EVENT_ACCENT_COLORS = ['#FF6038', '#E8A84A', '#5AAFCA'] as const;
 
 /** Primary accent for app chrome (header, calendar nav) — same as first event accent. */
 export const SCHEDULE_PRIMARY_ACCENT = SCHEDULE_EVENT_ACCENT_COLORS[0];

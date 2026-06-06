@@ -92,10 +92,10 @@ const server = createServer(async (req, res) => {
     res.setHeader('content-type', 'text/html; charset=utf-8');
     res.end(html);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('[server]', error);
     res.statusCode = 500;
     res.setHeader('content-type', 'text/plain; charset=utf-8');
-    res.end(message);
+    res.end("Database can't be reached.");
   }
 });
 
