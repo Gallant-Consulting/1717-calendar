@@ -291,13 +291,13 @@ export function EventList({
                 <button
                   type="button"
                   onClick={scrollListToTop}
-                  className="flex w-full shrink-0 items-center justify-center gap-1 pt-3 pb-2 text-center text-[11px] text-muted-foreground underline decoration-transparent underline-offset-2 transition-colors hover:text-foreground hover:decoration-foreground/30"
+                  className="flex w-full shrink-0 items-center justify-center gap-1 pt-3 pb-2 text-center text-sm text-muted-foreground underline decoration-transparent underline-offset-2 transition-colors hover:text-foreground hover:decoration-foreground/30"
                 >
                   Return to top
                   <ChevronUp className="h-3 w-3 shrink-0 opacity-80" strokeWidth={2.5} aria-hidden />
                 </button>
               ) : (
-                <p className="flex shrink-0 items-center justify-center gap-1 pt-3 pb-2 text-center text-[11px] text-muted-foreground">
+                <p className="flex shrink-0 items-center justify-center gap-1 pt-3 pb-2 text-center text-sm text-muted-foreground">
                   Scroll for more
                   <ChevronDown className="h-3 w-3 shrink-0 opacity-80" strokeWidth={2.5} aria-hidden />
                 </p>
