@@ -6,11 +6,21 @@ import { subscribeByEmail } from '../services/subscribeApi';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
-export function EmailSignup({ webhookUrl, className }: { webhookUrl: string; className?: string }) {
+export function EmailSignup({
+  webhookUrl,
+  className,
+  collapsible = false,
+}: {
+  webhookUrl: string;
+  className?: string;
+  /** When true, renders as a link that expands to the full form on click. */
+  collapsible?: boolean;
+}) {
   const inputId = useId();
   const errorId = `${inputId}-error`;
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
+  const [expanded, setExpanded] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -26,6 +36,21 @@ export function EmailSignup({ webhookUrl, className }: { webhookUrl: string; cla
       setStatus('error');
     }
   };
+
+  // Collapsible mode: show just a link until clicked
+  if (collapsible && !expanded && status !== 'success') {
+    return (
+      <div className={cn('shrink-0 text-center', className)}>
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="text-sm font-medium text-muted-foreground underline decoration-muted-foreground/40 underline-offset-2 transition-colors hover:text-foreground"
+        >
+          Get upcoming events in your inbox
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -212,7 +212,7 @@ export function EventList({
 
   return (
     <div className={cn('w-full', fillParent && 'flex h-full min-h-0 flex-col')}>
-      <div className="mb-5 flex shrink-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-2" role="search">
+      <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-2" role="search">
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <input
           id="event-list-search"
@@ -233,6 +233,10 @@ export function EventList({
           </button>
         ) : null}
       </div>
+
+      <p className="mb-3 shrink-0 text-right text-sm text-muted-foreground">
+        {events.length} {events.length === 1 ? 'event' : 'events'}{searchHasValue ? ' found' : ''}
+      </p>
 
       <div
         className={cn('flex min-h-0 flex-1 flex-col', !fillParent && 'min-h-[240px]')}

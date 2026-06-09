@@ -274,14 +274,14 @@ export default function App() {
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pt-8 pb-4">
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-6 pb-2 pt-2">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pt-6 pb-2 sm:px-6 sm:pt-8 sm:pb-4">
+        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-1 pb-2 pt-2 sm:px-6">
           <div className="mb-4 shrink-0">
             <h1 className="text-4xl font-semibold tracking-tight">
               Greater Richmond Business{' '}
               <span style={{ color: SCHEDULE_PRIMARY_ACCENT }}>Events</span>
             </h1>
-            <p className="mt-1 text-base text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               Provided by{' '}
               <a
                 href="https://www.1717collective.org/"
@@ -296,7 +296,7 @@ export default function App() {
           </div>
 
           {/* Mobile: header → search/list → email → footer. Desktop: calendar + email | list. */}
-          <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-6 lg:overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden sm:gap-6 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-6 lg:overflow-hidden">
             <aside className="hidden w-full min-w-0 shrink-0 flex-col gap-0 lg:sticky lg:top-4 lg:col-start-1 lg:row-start-1 lg:flex lg:max-w-[300px] lg:self-start">
               <Calendar
                 events={filteredEvents}
@@ -325,14 +325,14 @@ export default function App() {
             </div>
 
             <div className="shrink-0 lg:hidden">
-              <EmailSignup webhookUrl={SUBSCRIBE_WEBHOOK_URL} className="mt-0" />
+              <EmailSignup webhookUrl={SUBSCRIBE_WEBHOOK_URL} className="mt-0" collapsible />
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer Section - Below main content */}
-      <div className="shrink-0 py-4 text-center">
+      <div className="shrink-0 py-2 text-center sm:py-4">
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 max-w-5xl mx-auto px-6">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>
