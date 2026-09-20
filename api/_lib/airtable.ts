@@ -90,7 +90,10 @@ export async function listRecordsPage(
   },
 ): Promise<{ records: AirtableRecord[]; nextOffset?: string }> {
   const url = new URL(buildTableUrl(tableName));
-  url.searchParams.set('maxRecords', String(options.pageSize));
+  // `pageSize`, never `maxRecords`. Airtable treats maxRecords as a cap on the TOTAL
+  // result set, so once it has returned that many it considers the query complete and
+  // omits `offset` — which silently ends pagination after a single page.
+  url.searchParams.set('pageSize', String(options.pageSize));
   if (options.filterByFormula) {
     url.searchParams.set('filterByFormula', options.filterByFormula);
   }

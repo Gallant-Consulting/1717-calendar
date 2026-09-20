@@ -1,6 +1,28 @@
 # Decision Log
 
-## 2026-04-07 - Event promo images: `contain` + aspect-based max height
+## 2026-09-20 - Fix `/api/events` pagination: `pageSize`, not `maxRecords`
+
+### Context
+The published calendar showed no events after 2026-09-22 — no October, no November, and none of the newly scraped NAWBO Richmond events, even though all of them are **Approved** in Airtable with future dates.
+
+`listRecordsPage` sent the requested page size as Airtable's **`maxRecords`**. `maxRecords` caps the **total** result set, not the page: once Airtable has returned that many records it considers the query finished and **omits `offset`**. The handler therefore always returned `nextOffset: null`, `hasMore` in `App` was always false, and both the intersection-observer sentinel and the "Load more" button in `EventList` were permanently inert. The calendar was frozen at the first page, sorted by Start Date ascending.
+
+Measured against production on 2026-09-20:
+- 358 approved events, **306** matching `EVENTS_LIST_FILTER_FORMULA`
+- `GET /api/events` returned **100** events, `nextOffset: null`, last start date **2026-09-22**
+- `?limit=25` returned 25 with `nextOffset: null`; `?limit=50` returned 50 with `nextOffset: null` — the offset is suppressed at whatever value is sent, which is the signature of `maxRecords`
+- 206 events, including all of Oct/Nov and the 5 new NAWBO rows, were unreachable
+
+The `End Date` clause was also suspected and cleared: of 73 approved rows with a blank `End Date`, the filter drops **0**. The 52 rows it does drop are all genuinely older than the 30-day window, which is the intent.
+
+### Decision
+- Send **`pageSize`** in `listRecordsPage` (`api/_lib/airtable.ts`). Nothing else changes: same query params, same `{ events, nextOffset }` response shape, same ≤100 cap.
+- Leave `listRecords` alone — its `maxRecords` use (e.g. `findByEventId` with `maxRecords: 1`) is a genuine total cap and is correct.
+- `api/events.test.ts` asserted `maxRecords=100` / `maxRecords=50`, so the suite encoded the bug. Updated both, and added a regression test that asserts `maxRecords` is **never** sent on the list path.
+
+### Tradeoffs
+- The mocked Airtable in `events.test.ts` returns an `offset` alongside `maxRecords`, which the real API will not do. Tests can confirm which parameter is sent, but cannot catch this class of bug on their own — hence asserting the parameter explicitly rather than only asserting the mapped response.
+- Lazy loading is unchanged, so the month grid and client-side search still only see loaded pages. With 306 events that is 4 pages; making the grid month-complete would mean prefetching or a server-side month query, and is deliberately not part of this fix.
 
 ### Context
 Schedule cards used `object-cover` and a fixed `max-h-56`, which cropped varied banner/portrait/flyer assets unpredictably.
