@@ -58,7 +58,7 @@ describe('events proxy', () => {
     expect(payload.events[0].tags).toBeUndefined();
 
     const airtableUrl = fetchMock.mock.calls[0][0] as string;
-    expect(airtableUrl).toContain('maxRecords=100');
+    expect(airtableUrl).toContain('pageSize=100');
     expect(airtableUrl).toContain('sort%5B0%5D%5Bfield%5D=Start+Date');
     expect(airtableUrl).toContain('sort%5B0%5D%5Bdirection%5D=asc');
   });
@@ -84,8 +84,38 @@ describe('events proxy', () => {
     expect(payload.nextOffset).toBe('itrABC123/recXYZ');
 
     const airtableUrl = fetchMock.mock.calls[0][0] as string;
-    expect(airtableUrl).toContain('maxRecords=50');
+    expect(airtableUrl).toContain('pageSize=50');
     expect(airtableUrl).toMatch(/offset=/);
+  });
+
+  it('GET never sends maxRecords, which would suppress Airtable\'s offset', async () => {
+    // Regression guard. maxRecords caps the TOTAL result set: Airtable returns that many
+    // records and omits `offset`, so the client's load-more loop stops after one page and
+    // every event past the first page becomes unreachable. Real Airtable behaves this way
+    // even though a mock will happily return an offset alongside maxRecords.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ records: [], offset: 'itrABC/recXYZ' }), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await handler(new Request('http://localhost/api/events'));
+
+    const airtableUrl = fetchMock.mock.calls[0][0] as string;
+    expect(airtableUrl).not.toContain('maxRecords');
+    expect(airtableUrl).toContain('pageSize=');
+  });
+
+  it('GET caps page size at 100 and falls back to the default for junk limits', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ records: [] }), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await handler(new Request('http://localhost/api/events?limit=5000'));
+    expect(fetchMock.mock.calls[0][0] as string).toContain('pageSize=100');
+
+    await handler(new Request('http://localhost/api/events?limit=not-a-number'));
+    expect(fetchMock.mock.calls[1][0] as string).toContain('pageSize=100');
   });
 
   it('POST writes a record and returns mapped event', async () => {
