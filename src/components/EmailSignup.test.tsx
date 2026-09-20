@@ -14,7 +14,7 @@ describe('EmailSignup', () => {
 
     render(
       <EmailSignup
-        webhookUrl="https://primary-production-9195.up.railway.app/webhook/subscribe"
+        webhookUrl="https://n8n.workgallantly.com/webhook/subscribe"
       />,
     );
 
@@ -29,7 +29,7 @@ describe('EmailSignup', () => {
 
     const [calledUrl, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(calledUrl).toBe(
-      'https://primary-production-9195.up.railway.app/webhook/subscribe?email=reader%40example.com',
+      'https://n8n.workgallantly.com/webhook/subscribe?email=reader%40example.com',
     );
     expect(init?.method).toBe('GET');
   });
