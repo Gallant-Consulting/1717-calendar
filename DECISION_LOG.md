@@ -1,5 +1,22 @@
 # Decision Log
 
+## 2026-09-20 - Subscribe webhook points at the canonical n8n host
+
+### Context
+`SUBSCRIBE_WEBHOOK_URL` defaulted to `https://primary-production-9195.up.railway.app/webhook/subscribe`, the Railway-generated domain from before n8n moved to `https://n8n.workgallantly.com`. Both hosts still front the same instance today, so signups worked — but the generated domain is incidental, and if it is ever released the signup form breaks silently: the form posts, the request fails, and nothing surfaces anywhere.
+
+Verified 2026-09-20 that both hosts answer `/webhook/subscribe` identically.
+
+### Decision
+- Default to **`https://n8n.workgallantly.com/webhook/subscribe`** in `src/siteConfig.ts`, with `VITE_SUBSCRIBE_WEBHOOK_URL` still available for staging.
+- Update `env.example` and the `EmailSignup` test fixture so no reference to the generated domain remains in the repo.
+
+### Tradeoffs
+- Anything still calling the old host keeps working; this only changes what a fresh build ships.
+- The unsubscribe link is built n8n-side in `1717 Calendar - Weekly Email`, not here, so it is updated separately in that workflow.
+
+---
+
 ## 2026-09-20 - Fix `/api/events` pagination: `pageSize`, not `maxRecords`
 
 ### Context
