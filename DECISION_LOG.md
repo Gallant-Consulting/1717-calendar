@@ -1,5 +1,18 @@
 # Decision Log
 
+## 2026-10-07 - Exclude Vitest files from `tsc -b` app project
+
+### Context
+Railway/`npm run build` (`tsc -b && vite build`) failed after PR #5: `tsconfig.app.json` included all of `src`, so `initialListScroll.test.ts` was typechecked. Excess-property checks rejected fixtures with `endDate` against helpers typed as `{ startDate: Date }` (TS2353).
+
+### Decision
+Exclude `src/**/*.test.ts(x)` and `src/test` from **`tsconfig.app.json`**. Vitest continues to typecheck/run tests via its Vite pipeline; production `tsc -b` only covers app sources.
+
+### Tradeoffs
+- App `tsc -b` no longer catches type errors unique to test files; `npm test` remains the gate for those.
+
+---
+
 ## 2026-10-07 - Prefetch + reorder so the event list opens near today
 
 ### Context
