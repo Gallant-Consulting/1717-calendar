@@ -31,7 +31,7 @@ describe('pickInitialListScrollDay', () => {
     expect(day).toEqual(new Date(2026, 3, 8));
   });
 
-  it('falls back to an ongoing event (end on/after today) when all starts are before today', () => {
+  it('anchors on today when an ongoing event started before today (not the event start month)', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 3, 6, 12, 0, 0));
 
@@ -45,7 +45,29 @@ describe('pickInitialListScrollDay', () => {
       new Date(),
     );
 
-    expect(day).toEqual(new Date(2026, 3, 4));
+    expect(day).toEqual(new Date(2026, 3, 6));
+  });
+
+  it('does not jump to March for a year-long ongoing event when today is in October', () => {
+    // Production page-1 shape: long-running rows sort first by Start Date; none start on/after today.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 7, 12, 0, 0)); // Oct 7 local
+
+    const day = pickInitialListScrollDay(
+      [
+        {
+          startDate: new Date(2026, 2, 12, 0, 0),
+          endDate: new Date(2027, 2, 12, 0, 0),
+        },
+        {
+          startDate: new Date(2026, 5, 27, 0, 0),
+          endDate: new Date(2027, 5, 27, 0, 0),
+        },
+      ],
+      new Date(),
+    );
+
+    expect(day).toEqual(new Date(2026, 9, 7));
   });
 
   it('falls back to the first event when nothing is ongoing or future-starting', () => {

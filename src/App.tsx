@@ -142,6 +142,9 @@ export default function App() {
       return;
     }
 
+    // Keep the month grid on the intended anchor even if the list cannot scroll there yet
+    // (today's day often is not on the first API page).
+    setActiveMonth(new Date(day.getFullYear(), day.getMonth(), 1));
     setScrollToDay(day);
   }, [loading, filteredEvents, searchQuery]);
 

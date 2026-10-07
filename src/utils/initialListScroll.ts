@@ -5,7 +5,8 @@ export function localCalendarDayStart(d: Date): Date {
 
 /**
  * Pick which local calendar day the schedule list should scroll to on first load:
- * first event starting on/after today, else first still-ongoing event, else first row.
+ * first event starting on/after today, else today when something is still ongoing
+ * (covers year-long rows whose start month must not drive the calendar), else first row.
  */
 export function pickInitialListScrollDay(
   events: { startDate: Date; endDate: Date }[],
@@ -21,7 +22,12 @@ export function pickInitialListScrollDay(
     return localCalendarDayStart(futureOrTodayStart.startDate);
   }
 
-  const ongoing = events.find((e) => e.endDate >= todayStart);
-  const anchor = ongoing ?? events[0];
-  return localCalendarDayStart(anchor.startDate);
+  // Ongoing (or covering) events that started earlier: stay on today so the calendar
+  // does not jump to March/June/etc. for year-long Airtable rows on page 1.
+  const ongoing = events.some((e) => e.endDate >= todayStart);
+  if (ongoing) {
+    return todayStart;
+  }
+
+  return localCalendarDayStart(events[0].startDate);
 }
