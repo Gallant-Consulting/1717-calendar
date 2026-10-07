@@ -8,9 +8,13 @@ import {
   type EventPayload,
 } from './_lib/mappers';
 
-/** Approved + End Date within last 30 days through future (Airtable base timezone / TODAY()). */
+/**
+ * Approved + effective end within last 30 days through future (Airtable base timezone / TODAY()).
+ * Blank End Date falls back to Start Date — otherwise IS_BEFORE({End Date}, …) is false for blanks
+ * and every approved open-ended historical row (e.g. Dec 2025) fills page 1 and drives the calendar.
+ */
 export const EVENTS_LIST_FILTER_FORMULA =
-  "AND(OR(LOWER(TRIM({Status}&''))='approved', LOWER(TRIM({Status}&''))='apporoved'), NOT(IS_BEFORE({End Date}, DATEADD(TODAY(), -30, 'days'))))";
+  "AND(OR(LOWER(TRIM({Status}&''))='approved', LOWER(TRIM({Status}&''))='apporoved'), NOT(IS_BEFORE(IF({End Date}, {End Date}, {Start Date}), DATEADD(TODAY(), -30, 'days'))))";
 
 const MAX_EVENTS_PAGE = 100;
 const DEFAULT_EVENTS_PAGE = 100;

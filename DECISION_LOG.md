@@ -1,5 +1,20 @@
 # Decision Log
 
+## 2026-10-07 - Blank End Date must not become “now” (December calendar default)
+
+### Context
+Production loaded the month calendar on **December 2025** instead of the current month. `GET /api/events` page 1 was dominated by approved rows with **blank End Date** (starts back to 2025-12). Airtable’s `IS_BEFORE({End Date}, …)` is false for blanks, so `NOT(IS_BEFORE(...))` kept those rows in the 30-day window. The mapper then set missing End Date to **`new Date().toISOString()`**, so every blank-end row looked **ongoing**. `pickInitialListScrollDay` therefore anchored the list (and synced `activeMonth`) to the earliest start — December.
+
+### Decision
+- **`mapRecordToEvent`**: blank/invalid End Date falls back to **Start Date**, never wall-clock now (Start Date still falls back to now only if both are missing).
+- **`EVENTS_LIST_FILTER_FORMULA`**: use `IF({End Date}, {End Date}, {Start Date})` inside the 30-day `IS_BEFORE` check so blank ends are gated by Start Date.
+
+### Tradeoffs
+- Open-ended Airtable rows without an End Date only stay in the feed while their **Start Date** is within the window (same as a same-day event). Operators who need long-running items must set a real End Date.
+- Client scroll/sync logic unchanged; fixing bad effective end dates is enough for “today” anchoring.
+
+---
+
 ## 2026-09-20 - Subscribe webhook points at the canonical n8n host
 
 ### Context

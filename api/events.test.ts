@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import handler from './events';
+import handler, { EVENTS_LIST_FILTER_FORMULA } from './events';
 
 describe('events proxy', () => {
+  it('list filter treats blank End Date as Start Date so old rows do not pass the window', () => {
+    // Blank End Date makes IS_BEFORE({End Date}, …) false in Airtable, so NOT(IS_BEFORE(...))
+    // would keep every approved row with a missing end — including Dec 2025 — on page 1.
+    expect(EVENTS_LIST_FILTER_FORMULA).toContain(
+      'IF({End Date}, {End Date}, {Start Date})',
+    );
+  });
+
   beforeEach(() => {
     process.env.AIRTABLE_PAT = 'test_pat';
     process.env.AIRTABLE_BASE_ID = 'appsiGlVk94JBwqHG';
