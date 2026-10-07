@@ -64,4 +64,27 @@ describe('pickInitialListScrollDay', () => {
 
     expect(day).toEqual(new Date(2026, 2, 1));
   });
+
+  it('does not treat a past December start as ongoing when end equals start (blank-end fallback)', () => {
+    // Regression: mapping blank End Date → now made Dec rows look ongoing and anchored the UI there.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 7, 12, 0, 0)); // Oct 7 local
+
+    const decemberStart = new Date(2025, 11, 22, 10, 0);
+    const day = pickInitialListScrollDay(
+      [
+        {
+          startDate: decemberStart,
+          endDate: decemberStart,
+        },
+        {
+          startDate: new Date(2026, 9, 7, 12, 0),
+          endDate: new Date(2026, 9, 7, 13, 0),
+        },
+      ],
+      new Date(),
+    );
+
+    expect(day).toEqual(new Date(2026, 9, 7));
+  });
 });

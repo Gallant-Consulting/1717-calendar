@@ -73,21 +73,22 @@ function utcIsoForEasternMidnight(ymd: string): string {
   return new Date(Date.UTC(y, mo - 1, d, 5, 0, 0)).toISOString();
 }
 
-/** ISO string; date-only strings (YYYY-MM-DD) use Eastern midnight. */
-function parseIsoDate(input: unknown): string {
-  if (!input) return new Date().toISOString();
+/** ISO string; date-only strings (YYYY-MM-DD) use Eastern midnight. Returns null when blank/invalid. */
+function parseIsoDate(input: unknown): string | null {
+  if (input == null) return null;
   if (typeof input === 'string') {
     const trimmed = input.trim();
+    if (!trimmed) return null;
     if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
       return utcIsoForEasternMidnight(trimmed);
     }
     const parsed = new Date(trimmed);
-    return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
   }
   if (input instanceof Date) {
-    return input.toISOString();
+    return Number.isNaN(input.getTime()) ? null : input.toISOString();
   }
-  return new Date().toISOString();
+  return null;
 }
 
 /** First attachment URL from an Airtable attachments field, or undefined. */
@@ -141,11 +142,15 @@ export function mapRecordToEvent(record: AirtableRecord): EventPayload {
   const fields = record.fields;
 
   const eventId = asString(fields['Event ID']) || record.id;
+  // Never invent "now" for a missing date — that made blank End Dates look ongoing forever,
+  // so pickInitialListScrollDay / calendar month sync jumped to the earliest loaded month (e.g. December).
+  const startDate = parseIsoDate(fields['Start Date']) ?? new Date().toISOString();
+  const endDate = parseIsoDate(fields['End Date']) ?? startDate;
   return {
     id: eventId,
     title: asString(fields.Title),
-    startDate: parseIsoDate(fields['Start Date']),
-    endDate: parseIsoDate(fields['End Date']),
+    startDate,
+    endDate,
     isAllDay: Boolean(fields['All Day Event']),
     link: asString(fields['Event URL']) || asString(fields['Payment Link']) || undefined,
     notes: asString(fields.Notes) || undefined,
