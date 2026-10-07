@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pickInitialListScrollDay } from './initialListScroll';
+import {
+  eventStartsOnOrAfterDay,
+  orderEventsForScheduleList,
+  pickInitialListScrollDay,
+  shouldPrefetchMoreForTodayAnchor,
+} from './initialListScroll';
 
 describe('pickInitialListScrollDay', () => {
   afterEach(() => {
@@ -108,5 +113,101 @@ describe('pickInitialListScrollDay', () => {
     );
 
     expect(day).toEqual(new Date(2026, 9, 7));
+  });
+});
+
+describe('orderEventsForScheduleList', () => {
+  it('puts starts on/after today before year-long past-start rows (March must not lead)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 7, 12, 0, 0));
+
+    const foodDistribution = {
+      id: 'march',
+      startDate: new Date(2026, 2, 12, 0, 0),
+      endDate: new Date(2027, 2, 12, 0, 0),
+    };
+    const todayEvent = {
+      id: 'today',
+      startDate: new Date(2026, 9, 7, 12, 0),
+      endDate: new Date(2026, 9, 7, 13, 0),
+    };
+    const later = {
+      id: 'later',
+      startDate: new Date(2026, 9, 10, 9, 0),
+      endDate: new Date(2026, 9, 10, 10, 0),
+    };
+
+    const ordered = orderEventsForScheduleList(
+      [foodDistribution, later, todayEvent],
+      new Date(),
+    );
+
+    expect(ordered.map((e) => e.id)).toEqual(['today', 'later', 'march']);
+  });
+
+  it('eventStartsOnOrAfterDay is false for March year-long when day is October', () => {
+    const today = new Date(2026, 9, 7);
+    expect(
+      eventStartsOnOrAfterDay(
+        {
+          startDate: new Date(2026, 2, 12),
+          endDate: new Date(2027, 2, 12),
+        },
+        today,
+      ),
+    ).toBe(false);
+    expect(
+      eventStartsOnOrAfterDay(
+        {
+          startDate: new Date(2026, 9, 7, 12, 0),
+          endDate: new Date(2026, 9, 7, 13, 0),
+        },
+        today,
+      ),
+    ).toBe(true);
+  });
+
+  it('shouldPrefetchMoreForTodayAnchor when page only has past-start ongoing rows', () => {
+    const now = new Date(2026, 9, 7, 12, 0, 0);
+    expect(
+      shouldPrefetchMoreForTodayAnchor(
+        [
+          {
+            startDate: new Date(2026, 2, 12),
+            endDate: new Date(2027, 2, 12),
+          },
+        ],
+        now,
+        true,
+      ),
+    ).toBe(true);
+    expect(
+      shouldPrefetchMoreForTodayAnchor(
+        [
+          {
+            startDate: new Date(2026, 2, 12),
+            endDate: new Date(2027, 2, 12),
+          },
+          {
+            startDate: new Date(2026, 9, 7, 12, 0),
+            endDate: new Date(2026, 9, 7, 13, 0),
+          },
+        ],
+        now,
+        true,
+      ),
+    ).toBe(false);
+    expect(
+      shouldPrefetchMoreForTodayAnchor(
+        [
+          {
+            startDate: new Date(2026, 2, 12),
+            endDate: new Date(2027, 2, 12),
+          },
+        ],
+        now,
+        false,
+      ),
+    ).toBe(false);
   });
 });

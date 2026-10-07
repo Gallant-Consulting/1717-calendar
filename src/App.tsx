@@ -12,7 +12,11 @@ import {
   deleteEvent as apiDeleteEvent,
 } from './services/eventsApi';
 import { eventMatchesQuery } from './utils/eventSearch';
-import { pickInitialListScrollDay } from './utils/initialListScroll';
+import {
+  orderEventsForScheduleList,
+  pickInitialListScrollDay,
+  shouldPrefetchMoreForTodayAnchor,
+} from './utils/initialListScroll';
 import { SCHEDULE_PRIMARY_ACCENT } from './utils/scheduleAccent';
 import { FOOTER_LINKS, SUBSCRIBE_WEBHOOK_URL } from './siteConfig';
 import { EmailSignup } from './components/EmailSignup';
@@ -94,22 +98,48 @@ export default function App() {
     document.documentElement.classList.remove('dark');
   }, []);
 
-  // First page of events (server: approved + End Date within ~30 days; paginated)
+  // Load events; keep fetching pages until we have a start on/after today (or exhausted),
+  // so the schedule list can open near today instead of year-long March rows on page 1.
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError(null);
     setEventsNextOffset(null);
-    getEventsPage()
-      .then(({ events: firstPage, nextOffset }) => {
-        setEvents(firstPage);
-        setEventsNextOffset(nextOffset);
-      })
-      .catch((e) => {
-        setError(e.message || 'Failed to load events');
+
+    (async () => {
+      try {
+        let offset: string | undefined;
+        let accumulated: Event[] = [];
+        const now = new Date();
+
+        do {
+          const { events: page, nextOffset } = await getEventsPage(
+            offset ? { offset } : undefined,
+          );
+          if (cancelled) return;
+          const seen = new Set(accumulated.map((e) => e.id));
+          accumulated = [...accumulated, ...page.filter((e) => !seen.has(e.id))];
+          offset = nextOffset ?? undefined;
+          setEvents(accumulated);
+          setEventsNextOffset(nextOffset);
+        } while (
+          offset &&
+          shouldPrefetchMoreForTodayAnchor(accumulated, now, Boolean(offset))
+        );
+      } catch (e: unknown) {
+        if (cancelled) return;
+        const message = e instanceof Error ? e.message : 'Failed to load events';
+        setError(message);
         setEvents([]);
         setEventsNextOffset(null);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const upcomingEvents = useMemo(() => {
@@ -117,7 +147,7 @@ export default function App() {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const future = events.filter((event) => event.endDate >= todayStart);
     const base = future.length > 0 ? future : events;
-    return [...base].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    return orderEventsForScheduleList(base, now);
   }, [events]);
 
   const filteredEvents = useMemo(() => {
