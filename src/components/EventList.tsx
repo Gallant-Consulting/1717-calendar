@@ -147,7 +147,8 @@ export function EventList({
       }
     };
 
-    detectTopMonth();
+    // Only sync on scroll — an immediate detect at scrollTop=0 jumps the calendar to the
+    // earliest loaded month (e.g. March) when the initial today-anchor is not on page 1.
     root.addEventListener('scroll', detectTopMonth);
     return () => root.removeEventListener('scroll', detectTopMonth);
   }, [groupedEvents, onTopVisibleMonthChange, syncVisibleMonthToParent]);
@@ -182,6 +183,7 @@ export function EventList({
       const el = dayAnchorRefs.current[key];
       if (container && el) {
         scrollElementIntoContainer(container, el, scrollToDayBehavior);
+        // Programmatic scroll may not fire a 'scroll' listener in all environments; sync month now.
         onScrollToDayComplete?.();
         return;
       }
@@ -191,6 +193,8 @@ export function EventList({
         if (c && el2) {
           scrollElementIntoContainer(c, el2, scrollToDayBehavior);
         }
+        // Always complete so App can enable month sync; calendar stays on the pre-set activeMonth
+        // until the user scrolls (no immediate top-month detect on enable).
         onScrollToDayComplete?.();
       });
     };

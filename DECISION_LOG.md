@@ -1,5 +1,21 @@
 # Decision Log
 
+## 2026-10-07 - Initial anchor uses today for ongoing long-running events (March bug)
+
+### Context
+After blank-End-Date handling, production page 1 led with year-long approved rows (e.g. Food Distribution `2026-03-12` → `2027-03-12`). No loaded row started on/after today, so `pickInitialListScrollDay` used the first **ongoing** event’s **start day** → calendar synced to **March 2026**. Enabling list→calendar month sync then immediately called `detectTopMonth` at `scrollTop=0`, reinforcing the earliest month.
+
+### Decision
+- **`pickInitialListScrollDay`**: if nothing starts on/after today but something is still ongoing (`endDate >= today`), return **today**, not the ongoing event’s start.
+- **`App`**: set `activeMonth` from the picked day before `scrollToDay`.
+- **`EventList`**: when month sync turns on, listen for **scroll** only — do not run an immediate top-month detect (avoids jumping to page-1’s earliest month when today’s anchor is not rendered yet).
+
+### Tradeoffs
+- List may still show March+ year-long cards at the top until the user scrolls or loads more; the **calendar** stays on the current month.
+- Multi-day events that started earlier no longer scroll the list to their first day on load (today is preferred).
+
+---
+
 ## 2026-10-07 - Blank End Date must not become “now” (December calendar default)
 
 ### Context
