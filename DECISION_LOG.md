@@ -1,5 +1,20 @@
 # Decision Log
 
+## 2026-10-07 - Prefetch + reorder so the event list opens near today
+
+### Context
+PR #4 fixed the left calendar month, but the **list** still opened on **MARCH 2026** (Food Distribution, then June…). API pages sort by Start Date ascending, so page 1 is year-long past-start rows; `scrollToDay(today)` had no day anchor on page 1 and left `scrollTop=0` on March headers.
+
+### Decision
+- **`orderEventsForScheduleList`**: show starts on/after today first, then past-start ongoing rows.
+- **Initial fetch in `App`**: keep requesting `getEventsPage` while `shouldPrefetchMoreForTodayAnchor` (has more pages and no loaded start on/after today), under the loading spinner, then apply `pickInitialListScrollDay` / `scrollToDay`.
+
+### Tradeoffs
+- First paint waits for enough pages to include a today-or-future start (often 2–3 pages with current Airtable data).
+- Year-long programs still appear, but **after** upcoming starts—not at the top.
+
+---
+
 ## 2026-10-07 - Initial anchor uses today for ongoing long-running events (March bug)
 
 ### Context
