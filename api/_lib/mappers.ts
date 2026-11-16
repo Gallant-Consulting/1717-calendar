@@ -94,8 +94,17 @@ function utcIsoForEasternWallTime(wall: WallTime): string {
   return new Date(wallAsUtc - easternOffsetMs(guess)).toISOString();
 }
 
-function isDateOnly(input: unknown): boolean {
-  return typeof input === 'string' && DATE_ONLY.test(input.trim());
+/**
+ * True when a Start Date carries no real start time: date-only, or a wall time of exactly
+ * midnight, which the scraper writes when a page gives no time. Values with `Z` or an offset
+ * are real instants from the event form (8 PM EDT is `T00:00:00.000Z`), so they never count.
+ */
+function hasNoStartTime(input: unknown): boolean {
+  if (typeof input !== 'string') return false;
+  const trimmed = input.trim();
+  if (DATE_ONLY.test(trimmed)) return true;
+  const wall = WALL_TIME.exec(trimmed);
+  return wall !== null && Number(wall[4]) === 0 && Number(wall[5]) === 0 && Number(wall[6] ?? 0) === 0;
 }
 
 /**
@@ -187,8 +196,9 @@ export function mapRecordToEvent(record: AirtableRecord): EventPayload {
     title: asString(fields.Title),
     startDate,
     endDate,
-    // A date-only Start Date has no time to show, so treat it as all day rather than 12:00 AM.
-    isAllDay: Boolean(fields['All Day Event']) || isDateOnly(fields['Start Date']),
+    // A Start Date with no real time (date-only or midnight) is all day rather than 12:00 AM,
+    // matching the weekly email.
+    isAllDay: Boolean(fields['All Day Event']) || hasNoStartTime(fields['Start Date']),
     link: asString(fields['Event URL']) || asString(fields['Payment Link']) || undefined,
     notes: asString(fields.Notes) || undefined,
     hostOrganization:

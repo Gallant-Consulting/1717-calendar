@@ -79,8 +79,33 @@ describe('mapRecordToEvent all-day flag', () => {
     expect(event.isAllDay).toBe(true);
   });
 
+  it('treats a midnight wall-time Start Date as all day', () => {
+    // The scraper writes T00:00 when a page gives no time, as for WiM Member Connect.
+    const event = mapDates({
+      'Start Date': '2026-10-20T00:00:00',
+      'End Date': '2026-10-20T02:00:00',
+      'All Day Event': false,
+    });
+
+    expect(event.isAllDay).toBe(true);
+    expect(mapDates({ 'Start Date': '2026-10-15T00:00', 'All Day Event': false }).isAllDay).toBe(true);
+  });
+
+  it('keeps a midnight instant with Z or an offset as timed', () => {
+    // From the event form: 8 PM EDT on Oct 20 is stored as midnight UTC on Oct 21.
+    expect(mapDates({ 'Start Date': '2026-10-21T00:00:00.000Z', 'All Day Event': false }).isAllDay).toBe(
+      false,
+    );
+    expect(mapDates({ 'Start Date': '2026-10-21T00:00:00-04:00', 'All Day Event': false }).isAllDay).toBe(
+      false,
+    );
+  });
+
   it('keeps a timed Start Date as not all day', () => {
     expect(mapDates({ 'Start Date': '2026-11-12T08:00:00', 'All Day Event': false }).isAllDay).toBe(
+      false,
+    );
+    expect(mapDates({ 'Start Date': '2026-11-12T00:30:00', 'All Day Event': false }).isAllDay).toBe(
       false,
     );
   });

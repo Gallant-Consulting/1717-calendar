@@ -1,5 +1,19 @@
 # Decision Log
 
+## 2026-11-16 - Show a midnight Start Date as all day
+
+### Context
+After the Eastern-time fix, a few scraped events still showed "12:00 AM": their `Start Date` is a wall time of exactly midnight (`2026-10-20T00:00:00`), which the extractor writes when a page gives no time. The weekly email already shows those as all day.
+
+### Decision
+- `mapRecordToEvent` sets `isAllDay` when the `Start Date` is date-only **or** a wall time of `00:00` with no `Z` or offset.
+- Values with `Z` or an offset never count: they come from the event form and are real instants (8 PM EDT is stored as `T00:00:00.000Z`).
+
+### Tradeoffs
+- A scraped event that really starts at midnight shows as all day. The weekly email already does the same.
+
+---
+
 ## 2026-11-16 - Read Airtable times with no offset as Eastern
 
 ### Context
