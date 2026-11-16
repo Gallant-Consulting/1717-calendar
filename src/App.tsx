@@ -18,7 +18,7 @@ import {
   shouldPrefetchMoreForTodayAnchor,
 } from './utils/initialListScroll';
 import { SCHEDULE_PRIMARY_ACCENT } from './utils/scheduleAccent';
-import { FOOTER_LINKS, SUBSCRIBE_WEBHOOK_URL } from './siteConfig';
+import { FOOTER_LINKS, PROVIDER_CREDIT, SUBSCRIBE_WEBHOOK_URL } from './siteConfig';
 import { EmailSignup } from './components/EmailSignup';
 
 // Error Boundary Component
@@ -315,15 +315,15 @@ export default function App() {
               <span style={{ color: SCHEDULE_PRIMARY_ACCENT }}>Events</span>
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Provided by{' '}
+              {PROVIDER_CREDIT.prefix}{' '}
               <a
-                href="https://www.1717collective.org/"
+                href={PROVIDER_CREDIT.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium underline"
                 style={{ color: '#BC9DFF' }}
               >
-                1717 Collective
+                {PROVIDER_CREDIT.name}
               </a>
             </p>
           </div>
