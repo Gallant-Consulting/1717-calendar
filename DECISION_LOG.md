@@ -1,5 +1,20 @@
 # Decision Log
 
+## 2026-11-16 - Calendar header credit: Good Company
+
+### Context
+Production calendar (`calendar.goodcompanyrva.org`) still showed “Provided by 1717 Collective” with a link to `1717collective.org`. Good Company is the renamed organization (formerly 1717 Collective).
+
+### Decision
+- Centralize header credit in `PROVIDER_CREDIT` on `siteConfig` (`Provided by` / `Good Company` / `https://goodcompanyva.org/`).
+- Render that config from the calendar page header in `App.tsx`.
+- Lock the copy with `siteConfig.test.ts`.
+
+### Tradeoffs
+- Meta/title strings in `index.html` still mention 1717 Collective; out of scope for this credit-line fix.
+
+---
+
 ## 2026-10-07 - Exclude Vitest files from `tsc -b` app project
 
 ### Context
