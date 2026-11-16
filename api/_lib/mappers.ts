@@ -43,44 +43,80 @@ function buildEventRecordFields(event: Partial<EventPayload>): Record<string, un
 
 const EASTERN_TZ = 'America/New_York';
 
-/** Airtable date-only values: interpret as midnight (00:00) on that calendar day in US Eastern. */
-function utcIsoForEasternMidnight(ymd: string): string {
-  const [y, mo, d] = ymd.split('-').map(Number);
-  const start = Date.UTC(y, mo - 1, d - 1, 0, 0, 0);
-  const end = Date.UTC(y, mo - 1, d + 2, 0, 0, 0);
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: EASTERN_TZ,
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: false,
-  });
-  for (let t = start; t < end; t += 60 * 1000) {
-    const dt = new Date(t);
-    const parts = Object.fromEntries(formatter.formatToParts(dt).map((p) => [p.type, p.value]));
-    if (
-      Number(parts.year) === y &&
-      Number(parts.month) === mo &&
-      Number(parts.day) === d &&
-      Number(parts.hour) === 0 &&
-      Number(parts.minute) === 0
-    ) {
-      return dt.toISOString();
-    }
-  }
-  return new Date(Date.UTC(y, mo - 1, d, 5, 0, 0)).toISOString();
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+/** A date and time with no `Z` or offset, as the scraper writes local Eastern times. */
+const WALL_TIME = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?$/;
+
+const easternParts = new Intl.DateTimeFormat('en-US', {
+  timeZone: EASTERN_TZ,
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+  hourCycle: 'h23',
+});
+
+/** How far Eastern clocks are from UTC at this instant, in ms (e.g. −5h in EST). */
+function easternOffsetMs(instant: number): number {
+  const parts = Object.fromEntries(
+    easternParts.formatToParts(new Date(instant)).map((p): [string, number] => [p.type, Number(p.value)]),
+  );
+  const wallAsUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour % 24,
+    parts.minute,
+    parts.second,
+  );
+  return wallAsUtc - instant;
 }
 
-/** ISO string; date-only strings (YYYY-MM-DD) use Eastern midnight. Returns null when blank/invalid. */
+type WallTime = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+};
+
+/**
+ * The UTC instant for a wall-clock time in US Eastern, on either side of DST.
+ * The offset is read once at a guess and again at the result, so a time just past
+ * a DST change uses the offset in force then.
+ */
+function utcIsoForEasternWallTime(wall: WallTime): string {
+  const wallAsUtc = Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute, wall.second);
+  const guess = wallAsUtc - easternOffsetMs(wallAsUtc);
+  return new Date(wallAsUtc - easternOffsetMs(guess)).toISOString();
+}
+
+function isDateOnly(input: unknown): boolean {
+  return typeof input === 'string' && DATE_ONLY.test(input.trim());
+}
+
+/**
+ * ISO string, or null when blank/invalid. Airtable holds Eastern time with no offset:
+ * date-only values are Eastern midnight, timed values are that Eastern wall time.
+ * Values with `Z` or an offset are already instants and pass through.
+ */
 function parseIsoDate(input: unknown): string | null {
   if (input == null) return null;
   if (typeof input === 'string') {
     const trimmed = input.trim();
     if (!trimmed) return null;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      return utcIsoForEasternMidnight(trimmed);
+    const dateOnly = DATE_ONLY.exec(trimmed);
+    if (dateOnly) {
+      const [, y, mo, d] = dateOnly.map(Number);
+      return utcIsoForEasternWallTime({ year: y, month: mo, day: d, hour: 0, minute: 0, second: 0 });
+    }
+    const wall = WALL_TIME.exec(trimmed);
+    if (wall) {
+      const [, y, mo, d, h, mi, s] = wall.map((part) => Number(part ?? 0));
+      return utcIsoForEasternWallTime({ year: y, month: mo, day: d, hour: h, minute: mi, second: s });
     }
     const parsed = new Date(trimmed);
     return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
@@ -151,7 +187,8 @@ export function mapRecordToEvent(record: AirtableRecord): EventPayload {
     title: asString(fields.Title),
     startDate,
     endDate,
-    isAllDay: Boolean(fields['All Day Event']),
+    // A date-only Start Date has no time to show, so treat it as all day rather than 12:00 AM.
+    isAllDay: Boolean(fields['All Day Event']) || isDateOnly(fields['Start Date']),
     link: asString(fields['Event URL']) || asString(fields['Payment Link']) || undefined,
     notes: asString(fields.Notes) || undefined,
     hostOrganization:
