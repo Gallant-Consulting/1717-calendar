@@ -67,6 +67,31 @@ describe('mapRecordToEvent Eastern wall-clock times', () => {
   });
 });
 
+describe('mapRecordToEvent all-day flag', () => {
+  it('treats a date-only Start Date as all day even when All Day Event is unchecked', () => {
+    // The scraper leaves the time off when the page gives none; showing 12:00 AM is wrong.
+    const event = mapDates({
+      'Start Date': '2026-11-12',
+      'End Date': '2026-11-12T10:00:00',
+      'All Day Event': false,
+    });
+
+    expect(event.isAllDay).toBe(true);
+  });
+
+  it('keeps a timed Start Date as not all day', () => {
+    expect(mapDates({ 'Start Date': '2026-11-12T08:00:00', 'All Day Event': false }).isAllDay).toBe(
+      false,
+    );
+  });
+
+  it('keeps All Day Event when it is checked on a timed Start Date', () => {
+    expect(mapDates({ 'Start Date': '2026-11-12T08:00:00', 'All Day Event': true }).isAllDay).toBe(
+      true,
+    );
+  });
+});
+
 describe('mapRecordToEvent date mapping', () => {
   afterEach(() => {
     vi.useRealTimers();

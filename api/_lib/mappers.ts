@@ -94,6 +94,10 @@ function utcIsoForEasternWallTime(wall: WallTime): string {
   return new Date(wallAsUtc - easternOffsetMs(guess)).toISOString();
 }
 
+function isDateOnly(input: unknown): boolean {
+  return typeof input === 'string' && DATE_ONLY.test(input.trim());
+}
+
 /**
  * ISO string, or null when blank/invalid. Airtable holds Eastern time with no offset:
  * date-only values are Eastern midnight, timed values are that Eastern wall time.
@@ -183,7 +187,8 @@ export function mapRecordToEvent(record: AirtableRecord): EventPayload {
     title: asString(fields.Title),
     startDate,
     endDate,
-    isAllDay: Boolean(fields['All Day Event']),
+    // A date-only Start Date has no time to show, so treat it as all day rather than 12:00 AM.
+    isAllDay: Boolean(fields['All Day Event']) || isDateOnly(fields['Start Date']),
     link: asString(fields['Event URL']) || asString(fields['Payment Link']) || undefined,
     notes: asString(fields.Notes) || undefined,
     hostOrganization:

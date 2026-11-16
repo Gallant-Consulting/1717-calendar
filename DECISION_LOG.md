@@ -9,6 +9,7 @@ The n8n scraper writes `Start Date` / `End Date` as Eastern wall-clock text with
 - In `api/_lib/mappers.ts`, read a date-time with no `Z` or offset as that wall time in `America/New_York`. Values with `Z` or an offset (rows saved from the event form) still pass through `new Date()`.
 - Replace the minute-by-minute search for Eastern midnight with one offset lookup checked at the result, used for both date-only and timed values.
 - `mappers.test.ts` pins `TZ=UTC` so the tests fail on a developer's Eastern machine if a parse starts depending on the server's zone again.
+- A date-only `Start Date` maps to `isAllDay: true` even when **All Day Event** is unchecked. The scraper leaves the time off when the page gives none, and those rows showed as "12:00 AM — 12:00 AM". The weekly email already treats them as all day.
 
 ### Tradeoffs
 - A wall time that doesn't exist (2:30 AM on the March change) resolves to the hour before; one that happens twice (1:30 AM in November) resolves to the first. Neither occurs in event data in practice.
