@@ -1,5 +1,20 @@
 # Decision Log
 
+## 2026-11-16 - Read Airtable times with no offset as Eastern
+
+### Context
+The n8n scraper writes `Start Date` / `End Date` as Eastern wall-clock text with no zone (`2026-11-13T11:30:00`). `parseIsoDate` handed those to `new Date()`, which reads them in the server's zone, and Railway runs in UTC. Every scraped timed event showed 4 hours early in EDT and 5 in EST: an 11:30 AM event showed 6:30 AM, 8:00 AM showed 3:00 AM. Date-only values were already read as Eastern midnight.
+
+### Decision
+- In `api/_lib/mappers.ts`, read a date-time with no `Z` or offset as that wall time in `America/New_York`. Values with `Z` or an offset (rows saved from the event form) still pass through `new Date()`.
+- Replace the minute-by-minute search for Eastern midnight with one offset lookup checked at the result, used for both date-only and timed values.
+- `mappers.test.ts` pins `TZ=UTC` so the tests fail on a developer's Eastern machine if a parse starts depending on the server's zone again.
+
+### Tradeoffs
+- A wall time that doesn't exist (2:30 AM on the March change) resolves to the hour before; one that happens twice (1:30 AM in November) resolves to the first. Neither occurs in event data in practice.
+
+---
+
 ## 2026-11-16 - Calendar header credit: Good Company
 
 ### Context
