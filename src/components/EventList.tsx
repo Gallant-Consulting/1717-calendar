@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
-import { ScheduleEventCard } from './ScheduleEventCard';
+import { AgendaDay } from './AgendaDay';
 import { cn } from './ui/utils';
 import type { Event } from '../types';
-import { getScheduleAccentColor } from '../utils/scheduleAccent';
+import { easternDayKey, groupEventsByMonthAndDay } from '../utils/agendaGroups';
 
 interface EventListProps {
+  /** Already ordered and search-filtered; the list groups these by day and shows nothing else. */
   events: Event[];
-  /**
-   * Full ordered list used to compute accent colors (e.g. all filtered events).
-   * When omitted, `events` is used — should match what the calendar uses for dots.
-   */
-  accentSourceEvents?: Event[];
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   hasMore: boolean;
@@ -33,10 +29,6 @@ interface EventListProps {
   scrollToDayBehavior?: ScrollBehavior;
 }
 
-function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${date.getMonth()}`;
-}
-
 /** Stable key for a calendar day in the user's local timezone. */
 function dayKeyLocal(d: Date): string {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -56,7 +48,6 @@ function scrollElementIntoContainer(
 
 export function EventList({
   events,
-  accentSourceEvents,
   searchQuery,
   onSearchQueryChange,
   hasMore,
@@ -69,7 +60,6 @@ export function EventList({
   onScrollToDayComplete,
   scrollToDayBehavior = 'smooth',
 }: EventListProps) {
-  const accentLookupEvents = accentSourceEvents ?? events;
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const scrollRootRef = useRef<HTMLDivElement | null>(null);
   const scrollContentRef = useRef<HTMLDivElement | null>(null);
@@ -96,20 +86,7 @@ export function EventList({
     scrollRootRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const groupedEvents = useMemo(() => {
-    const groups: { key: string; month: Date; items: Event[] }[] = [];
-    for (const event of events) {
-      const eventMonth = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), 1);
-      const key = monthKey(eventMonth);
-      const existing = groups.find((group) => group.key === key);
-      if (existing) {
-        existing.items.push(event);
-      } else {
-        groups.push({ key, month: eventMonth, items: [event] });
-      }
-    }
-    return groups;
-  }, [events]);
+  const groupedEvents = useMemo(() => groupEventsByMonthAndDay(events), [events]);
 
   useEffect(() => {
     if (!hasMore || loadingMore || !sentinelRef.current) return;
@@ -129,21 +106,25 @@ export function EventList({
     const root = scrollRootRef.current;
     if (!root) return;
 
+    // The month whose section holds the list's top edge: the last heading at or above it.
+    // (Nearest-heading-either-way picked the *next* month when its heading sat just below,
+    // e.g. jumping to Nov 30 flipped the calendar to December.)
     const detectTopMonth = () => {
       const rootTop = root.getBoundingClientRect().top;
-      let nearest: { month: Date; delta: number } | null = null;
+      let current: Date | null = null;
 
       for (const group of groupedEvents) {
         const heading = monthHeaderRefs.current[group.key];
         if (!heading) continue;
-        const delta = Math.abs(heading.getBoundingClientRect().top - rootTop);
-        if (!nearest || delta < nearest.delta) {
-          nearest = { month: group.month, delta };
+        if (current === null || heading.getBoundingClientRect().top <= rootTop + 8) {
+          current = group.month;
+        } else {
+          break;
         }
       }
 
-      if (nearest) {
-        onTopVisibleMonthChange(nearest.month);
+      if (current) {
+        onTopVisibleMonthChange(current);
       }
     };
 
@@ -202,6 +183,7 @@ export function EventList({
   }, [scrollToDay, events, onScrollToDayComplete, scrollToDayBehavior]);
 
   const searchHasValue = searchQuery.trim().length > 0;
+  const todayKey = easternDayKey(new Date());
 
   const monthTitle = (date: Date) =>
     date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -216,7 +198,7 @@ export function EventList({
 
   return (
     <div className={cn('w-full', fillParent && 'flex h-full min-h-0 flex-col')}>
-      <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-2" role="search">
+      <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md border border-input bg-card px-3 py-2 transition-shadow focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-soft" role="search">
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <input
           id="event-list-search"
@@ -238,7 +220,7 @@ export function EventList({
         ) : null}
       </div>
 
-      <p className="mb-3 shrink-0 text-right text-sm text-muted-foreground">
+      <p className="mb-3 shrink-0 text-right text-xs text-dimmed">
         {events.length} {events.length === 1 ? 'event' : 'events'}{searchHasValue ? ' found' : ''}
       </p>
 
@@ -263,30 +245,25 @@ export function EventList({
                       ref={(node) => {
                         monthHeaderRefs.current[group.key] = node;
                       }}
-                      className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                      className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-dimmed"
                     >
                       {monthTitle(group.month)}
                     </h3>
-                    <div className="space-y-4">
-                      {group.items.map((event, itemIdx) => {
-                        const dk = dayKeyLocal(event.startDate);
-                        const prev = group.items[itemIdx - 1];
-                        const isFirstOfDay = !prev || dayKeyLocal(prev.startDate) !== dk;
-                        const accentColor = getScheduleAccentColor(event, accentLookupEvents);
+                    <div className="rounded-md border border-input bg-card">
+                      {group.days.map((day) => {
+                        // Calendar clicks arrive as a local day; anchor each day group under the
+                        // local day of its first event (same as Eastern for Richmond viewers).
+                        const anchorKey = dayKeyLocal(day.date);
                         return (
-                          <div
-                            key={`${event.id}-${itemIdx}`}
-                            ref={
-                              isFirstOfDay
-                                ? (el) => {
-                                    if (el) dayAnchorRefs.current[dk] = el;
-                                    else delete dayAnchorRefs.current[dk];
-                                  }
-                                : undefined
-                            }
-                          >
-                            <ScheduleEventCard event={event} accentColor={accentColor} />
-                          </div>
+                          <AgendaDay
+                            key={day.key}
+                            day={day}
+                            isToday={day.key === todayKey}
+                            anchorRef={(el) => {
+                              if (el) dayAnchorRefs.current[anchorKey] = el;
+                              else delete dayAnchorRefs.current[anchorKey];
+                            }}
+                          />
                         );
                       })}
                     </div>
@@ -325,7 +302,7 @@ export function EventList({
               type="button"
               disabled={loadingMore}
               onClick={() => void onLoadMore()}
-              className="rounded border border-border px-3 py-1 text-xs text-muted-foreground hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+              className="rounded-md border border-input bg-card px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary-soft disabled:pointer-events-none disabled:opacity-50"
             >
               {loadingMore ? 'Loading…' : 'Load more events'}
             </button>

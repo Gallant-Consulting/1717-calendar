@@ -43,6 +43,11 @@ const shortWeekdayFmt = new Intl.DateTimeFormat('en-US', {
   weekday: 'short',
 });
 
+const longWeekdayFmt = new Intl.DateTimeFormat('en-US', {
+  timeZone: EVENT_TIME_ZONE,
+  weekday: 'long',
+});
+
 const searchDateFmtLong = new Intl.DateTimeFormat('en-US', {
   timeZone: EVENT_TIME_ZONE,
   month: 'long',
@@ -120,6 +125,10 @@ export function formatMonthNameLongEastern(date: Date): string {
 
 export function formatShortWeekdayEastern(date: Date): string {
   return shortWeekdayFmt.format(date);
+}
+
+export function formatWeekdayLongEastern(date: Date): string {
+  return longWeekdayFmt.format(date);
 }
 
 /** Haystack fragments for search: Eastern calendar labels. */

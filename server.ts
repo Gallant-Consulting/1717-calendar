@@ -8,6 +8,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import eventsHandler from './api/events';
+import { legacyHostRedirect } from './api/_lib/canonicalHost';
 import { incomingMessageToWebRequest, writeWebResponseToNode } from './api/_lib/nodeHttpAdapter';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -26,6 +27,7 @@ const MIME: Record<string, string> = {
   '.webp': 'image/webp',
   '.woff2': 'font/woff2',
   '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json',
   '.map': 'application/json',
 };
 
@@ -46,6 +48,15 @@ function safeFileUnderRoot(root: string, urlPathname: string): string | null {
 
 const server = createServer(async (req, res) => {
   try {
+    const redirectTo = legacyHostRedirect(req.headers.host, req.url);
+    if (redirectTo) {
+      // 301 for page loads; 308 keeps the method for anything else.
+      res.statusCode = req.method === 'GET' || req.method === 'HEAD' ? 301 : 308;
+      res.setHeader('location', redirectTo);
+      res.end();
+      return;
+    }
+
     const host = req.headers.host || `localhost:${PORT}`;
     const origin = `http://${host}`;
     const url = new URL(req.url || '/', origin);

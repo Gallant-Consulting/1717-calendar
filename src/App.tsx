@@ -1,5 +1,6 @@
 import './styles/globals.css'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { Calendar } from './components/Calendar';
 import { EventList } from './components/EventList';
 import { EventModal } from './components/EventModal';
@@ -17,8 +18,7 @@ import {
   pickInitialListScrollDay,
   shouldPrefetchMoreForTodayAnchor,
 } from './utils/initialListScroll';
-import { SCHEDULE_PRIMARY_ACCENT } from './utils/scheduleAccent';
-import { FOOTER_LINKS, PROVIDER_CREDIT, SUBSCRIBE_WEBHOOK_URL } from './siteConfig';
+import { FOOTER_LINKS, GOOD_COMPANY, SUBSCRIBE_WEBHOOK_URL } from './siteConfig';
 import { EmailSignup } from './components/EmailSignup';
 
 // Error Boundary Component
@@ -293,40 +293,45 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background text-foreground geometric-bg">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background text-foreground">
       {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded shadow z-50">
+        <div className="fixed bottom-4 right-4 z-50 rounded-md bg-destructive px-6 py-3 text-destructive-foreground shadow">
           {error}
         </div>
       )}
       {/* Loading Spinner */}
       {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/10 z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#102225]/10">
+          <div className="h-12 w-12 animate-spin rounded-full border-t-4 border-solid border-primary"></div>
         </div>
       )}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pt-6 pb-2 sm:px-6 sm:pt-8 sm:pb-4">
         <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-1 pb-2 pt-2 sm:px-6">
-          <div className="mb-4 shrink-0">
-            <h1 className="text-4xl font-semibold tracking-tight">
-              Greater Richmond Business{' '}
-              <span style={{ color: SCHEDULE_PRIMARY_ACCENT }}>Events</span>
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {PROVIDER_CREDIT.prefix}{' '}
+          <header className="mb-4 shrink-0 sm:mb-5">
+            {/* Mirrors the goodcompanyva.org header: stacked wordmark left, primary CTA right. */}
+            <div className="mb-4 flex items-center justify-between gap-4 sm:mb-6">
               <a
-                href={PROVIDER_CREDIT.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium underline"
-                style={{ color: '#BC9DFF' }}
+                href={GOOD_COMPANY.url}
+                aria-label={`${GOOD_COMPANY.name} — home`}
+                className="font-headline leading-[1.05] tracking-[-0.02em] text-ink transition-colors hover:text-primary"
               >
-                {PROVIDER_CREDIT.name}
+                <span className="block text-lg font-bold sm:text-2xl">GOOD</span>
+                <span className="block text-lg font-light sm:text-2xl">COMPANY</span>
               </a>
-            </p>
-          </div>
+              <a
+                href={GOOD_COMPANY.startNavigatingUrl}
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Start Navigating
+                <ArrowRight className="size-3.5" aria-hidden />
+              </a>
+            </div>
+            <h1 className="font-headline text-3xl font-bold leading-[1.05] tracking-[-0.02em] text-ink sm:text-4xl">
+              Greater Richmond Business <span className="text-primary">Events</span>
+            </h1>
+          </header>
 
           {/* Mobile: header → search/list → email → footer. Desktop: calendar + email | list. */}
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden sm:gap-6 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-6 lg:overflow-hidden">
@@ -343,7 +348,6 @@ export default function App() {
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:col-start-2 lg:row-start-1 lg:h-full lg:min-h-0 lg:pt-[14px]">
               <EventList
                 events={filteredEvents}
-                accentSourceEvents={filteredEvents}
                 loadingMore={loadingMore}
                 searchQuery={searchQuery}
                 onSearchQueryChange={setSearchQuery}
@@ -367,10 +371,10 @@ export default function App() {
       {/* Footer Section - Below main content */}
       <div className="shrink-0 py-2 text-center sm:py-4">
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 max-w-5xl mx-auto px-6">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 text-xs text-dimmed">
             <span>
               Powered by{' '}
-              <a href="https://workgallantly.com" className="underline transition-colors hover:opacity-80" style={{ color: '#BC9DFF' }} target="_blank" rel="noopener noreferrer">Gallant</a>
+              <a href="https://workgallantly.com" className="text-toned underline decoration-border underline-offset-2 transition-colors hover:text-primary" target="_blank" rel="noopener noreferrer">Gallant</a>
               &nbsp;&copy; {currentYear}
               
             </span>
@@ -380,7 +384,7 @@ export default function App() {
               <a 
                 key={index}
                 href={link.url} 
-                className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                className="text-primary underline transition-opacity hover:opacity-80"
                 target="_blank"
                 rel="noopener noreferrer"
               >

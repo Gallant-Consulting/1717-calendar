@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { Event } from '../types';
+import { eventMatchesQuery } from '../utils/eventSearch';
 import { EventList } from './EventList';
 
 function mkEvent(
@@ -150,5 +151,76 @@ describe('EventList', () => {
     const loadMoreButtons = screen.getAllByRole('button', { name: /load more events/i });
     fireEvent.click(loadMoreButtons[loadMoreButtons.length - 1]);
     expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it('lists each day once with all of its events', () => {
+    const events: Event[] = [
+      // Noon and 2 PM Eastern on June 15, noon on June 16 (UTC instants so any test TZ agrees).
+      mkEvent({ id: 'a', title: 'Coffee Connection', startDate: new Date('2026-06-15T16:00:00Z'), endDate: new Date('2026-06-15T17:00:00Z') }),
+      mkEvent({ id: 'b', title: 'Job Fair', startDate: new Date('2026-06-15T18:00:00Z'), endDate: new Date('2026-06-15T20:00:00Z') }),
+      mkEvent({ id: 'c', title: 'Fencing Demonstration', startDate: new Date('2026-06-16T16:00:00Z'), endDate: new Date('2026-06-16T17:00:00Z') }),
+    ];
+
+    render(
+      <EventList events={events} searchQuery="" onSearchQueryChange={vi.fn()} hasMore={false} onLoadMore={vi.fn()} scrollContainerHeight="480px" />,
+    );
+
+    const days = screen.getAllByRole('group');
+    expect(days.map((d) => d.getAttribute('aria-label'))).toEqual(['Monday, June 15', 'Tuesday, June 16']);
+    expect(within(days[0]).getByText('Coffee Connection')).toBeInTheDocument();
+    expect(within(days[0]).getByText('Job Fair')).toBeInTheDocument();
+    expect(within(days[1]).getByText('Fencing Demonstration')).toBeInTheDocument();
+    expect(within(days[0]).getAllByText('15')).toHaveLength(1);
+  });
+
+  it('narrows to matching events and their days when searching', () => {
+    const events: Event[] = [
+      mkEvent({ id: 'a', title: 'Coffee Connection', hostOrganization: 'Ashland', startDate: new Date('2026-06-15T16:00:00Z'), endDate: new Date('2026-06-15T17:00:00Z') }),
+      mkEvent({ id: 'b', title: 'Job Fair', startDate: new Date('2026-06-15T18:00:00Z'), endDate: new Date('2026-06-15T20:00:00Z') }),
+      mkEvent({ id: 'c', title: 'Fencing Demonstration', hostOrganization: 'Ashland', startDate: new Date('2026-06-16T16:00:00Z'), endDate: new Date('2026-06-16T17:00:00Z') }),
+      mkEvent({ id: 'd', title: 'Walk-In Wednesdays', startDate: new Date('2026-06-17T14:00:00Z'), endDate: new Date('2026-06-17T16:00:00Z') }),
+    ];
+    const props = { onSearchQueryChange: vi.fn(), hasMore: false, onLoadMore: vi.fn(), scrollContainerHeight: '480px' };
+    // App filters with eventMatchesQuery before handing events to the list; do the same here.
+    const search = (q: string) => events.filter((e) => eventMatchesQuery(e, q));
+
+    const { rerender } = render(<EventList events={events} searchQuery="" {...props} />);
+    expect(screen.getAllByRole('group')).toHaveLength(3);
+
+    rerender(<EventList events={search('ashland')} searchQuery="ashland" {...props} />);
+    let days = screen.getAllByRole('group');
+    expect(days.map((d) => d.getAttribute('aria-label'))).toEqual(['Monday, June 15', 'Tuesday, June 16']);
+    expect(within(days[0]).getByText('Coffee Connection')).toBeInTheDocument();
+    expect(screen.queryByText('Job Fair')).not.toBeInTheDocument();
+    expect(screen.queryByText('Walk-In Wednesdays')).not.toBeInTheDocument();
+    expect(screen.getByText('2 events found')).toBeInTheDocument();
+
+    rerender(<EventList events={search('fencing')} searchQuery="fencing" {...props} />);
+    days = screen.getAllByRole('group');
+    expect(days).toHaveLength(1);
+    expect(days[0]).toHaveAttribute('aria-label', 'Tuesday, June 16');
+    expect(screen.getByText('1 event found')).toBeInTheDocument();
+
+    rerender(<EventList events={search('no such event')} searchQuery="no such event" {...props} />);
+    expect(screen.queryAllByRole('group')).toHaveLength(0);
+    expect(screen.getByText('No matching events found')).toBeInTheDocument();
+
+    rerender(<EventList events={events} searchQuery="" {...props} />);
+    expect(screen.getAllByRole('group')).toHaveLength(3);
+  });
+
+  it('labels the current day as Today', () => {
+    const now = new Date();
+    render(
+      <EventList
+        events={[mkEvent({ id: 't', title: 'Happening now', startDate: now, endDate: now })]}
+        searchQuery=""
+        onSearchQueryChange={vi.fn()}
+        hasMore={false}
+        onLoadMore={vi.fn()}
+        scrollContainerHeight="480px"
+      />,
+    );
+    expect(within(screen.getByRole('group')).getByText('Today')).toBeInTheDocument();
   });
 });
