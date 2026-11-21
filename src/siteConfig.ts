@@ -5,11 +5,11 @@ export const SUBSCRIBE_WEBHOOK_URL =
   import.meta.env.VITE_SUBSCRIBE_WEBHOOK_URL ??
   'https://n8n.workgallantly.com/webhook/subscribe';
 
-/** Calendar page header credit (formerly 1717 Collective). */
-export const PROVIDER_CREDIT = {
-  prefix: 'Provided by',
+/** The organization behind the calendar (formerly 1717 Collective); header wordmark and nav. */
+export const GOOD_COMPANY = {
   name: 'Good Company',
   url: 'https://goodcompanyva.org/',
+  startNavigatingUrl: 'https://goodcompanyva.org/needs',
 } as const;
 
 export const FOOTER_LINKS: Array<{ text: string; url: string }> = [

@@ -1,5 +1,7 @@
 # Shared Calendar — Central VA Events
 
+Live at **[calendar.goodcompanyva.org](https://calendar.goodcompanyva.org/)** for [Good Company](https://goodcompanyva.org/) (formerly 1717 Collective). Old hosts redirect there (`api/_lib/canonicalHost.ts`).
+
 A **read-focused** event calendar for the Central Virginia startup ecosystem: **month grid** + **scrollable schedule list**, backed by **Airtable** through a **same-origin `/api/events`** proxy (secrets never ship to the browser).
 
 **UI (main app):** Viewport-locked layout; list search; **Load more** fetches the next server page; calendar dots match list **accent colors**; titles link out when an event URL exists; **Hosted by** uses `host_name` / Host Group; images from URL or attachment fields. **Times** display in **US Eastern** (`America/New_York`).

@@ -245,7 +245,7 @@ export function EventModal({
           <div className="flex gap-4 pt-4 border-t border-border">
             <Button
               onClick={handleSave}
-              className="bg-blue-600 hover:bg-blue-700 text-white hover:text-white text-lg px-8 py-3 h-auto"
+              className="text-lg px-8 py-3 h-auto hover:bg-primary hover:opacity-90"
             >
               {initialData ? 'Update Event' : 'Submit Event'}
             </Button>

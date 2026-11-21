@@ -16,6 +16,7 @@ export default {
         'popover-foreground': 'var(--popover-foreground)',
         primary: 'var(--primary)',
         'primary-foreground': 'var(--primary-foreground)',
+        'primary-soft': 'var(--primary-soft)',
         secondary: 'var(--secondary)',
         'secondary-foreground': 'var(--secondary-foreground)',
         muted: 'var(--muted)',
@@ -29,7 +30,13 @@ export default {
         'input-background': 'var(--input-background)',
         'switch-background': 'var(--switch-background)',
         ring: 'var(--ring)',
-        // Add more as needed
+        ink: 'var(--ink)',
+        toned: 'var(--text-toned)',
+        dimmed: 'var(--text-dimmed)',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        headline: ['"IBM Plex Sans"', 'Inter', 'system-ui', 'sans-serif'],
       },
     },
   },

@@ -44,7 +44,7 @@ export function EmailSignup({
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="text-sm font-medium text-muted-foreground underline decoration-muted-foreground/40 underline-offset-2 transition-colors hover:text-foreground"
+          className="text-sm font-semibold text-primary underline decoration-primary-soft decoration-2 underline-offset-2 transition-colors hover:decoration-primary"
         >
           Get upcoming events in your inbox
         </button>
@@ -55,11 +55,11 @@ export function EmailSignup({
   return (
     <div
       className={cn(
-        'mt-4 w-full shrink-0 rounded-lg border border-border bg-card/80 p-3 shadow-sm',
+        'mt-4 w-full shrink-0 rounded-md border border-border bg-card p-4',
         className,
       )}
     >
-      <p className="mb-4 text-sm font-medium text-foreground">Get upcoming events in your inbox</p>
+      <p className="mb-3 font-headline text-base font-bold leading-snug tracking-[-0.01em] text-ink">Get upcoming events in your inbox</p>
 
       {status === 'success' ? (
         <p className="text-sm text-muted-foreground" role="status">
@@ -91,7 +91,7 @@ export function EmailSignup({
               Couldn&apos;t subscribe. Try again.
             </p>
           ) : null}
-          <Button type="submit" size="sm" variant="outline" disabled={status === 'loading'} className="w-full">
+          <Button type="submit" size="sm" disabled={status === 'loading'} className="w-full font-semibold hover:bg-primary hover:opacity-90">
             {status === 'loading' ? 'Subscribing…' : 'Subscribe'}
           </Button>
         </form>

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import type { Event } from '../types';
-import { getScheduleAccentColor, SCHEDULE_PRIMARY_ACCENT } from '../utils/scheduleAccent';
 
 interface CalendarProps {
   events: Event[];
@@ -22,7 +21,7 @@ export function Calendar({ events, displayMonth, onDisplayMonthChange, onDayWith
   const [internalMonth, setInternalMonth] = useState(() => monthStart(new Date()));
   const activeMonth = displayMonth ? monthStart(displayMonth) : internalMonth;
 
-  /** Events per local calendar day in the active month (same `events` order as accent lookup). */
+  /** Events per local calendar day in the active month. */
   const eventsByDay = useMemo(() => {
     const map = new Map<string, Event[]>();
     for (const event of events) {
@@ -68,27 +67,25 @@ export function Calendar({ events, displayMonth, onDisplayMonthChange, onDayWith
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
+    <div className="rounded-md border border-border bg-card p-5">
       <div className="mb-4 grid grid-cols-[minmax(0,auto)_1fr_minmax(0,auto)] items-center gap-x-2">
         <Button
           aria-label="Previous month"
           variant="ghost"
           size="icon"
-          className="shrink-0"
-          style={{ color: SCHEDULE_PRIMARY_ACCENT }}
+          className="shrink-0 text-primary hover:bg-primary-soft hover:text-primary"
           onClick={goPrev}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="min-w-0 text-center text-xl font-medium sm:text-2xl">
+        <h2 className="min-w-0 text-center font-headline text-xl font-bold tracking-[-0.01em] text-ink">
           {activeMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </h2>
         <Button
           aria-label="Next month"
           variant="ghost"
           size="icon"
-          className="shrink-0 justify-self-end"
-          style={{ color: SCHEDULE_PRIMARY_ACCENT }}
+          className="shrink-0 justify-self-end text-primary hover:bg-primary-soft hover:text-primary"
           onClick={goNext}
         >
           <ChevronRight className="h-4 w-4" />
@@ -96,8 +93,7 @@ export function Calendar({ events, displayMonth, onDisplayMonthChange, onDayWith
       </div>
 
       <div
-        className="grid grid-cols-7 gap-y-1 text-center text-[11px] font-medium"
-        style={{ color: SCHEDULE_PRIMARY_ACCENT }}
+        className="grid grid-cols-7 gap-y-1 text-center text-[10.5px] font-bold uppercase tracking-[0.12em] text-dimmed"
       >
         {WEEK_DAYS.map((day) => (
           <div key={day} className="py-1">
@@ -140,8 +136,7 @@ export function Calendar({ events, displayMonth, onDisplayMonthChange, onDayWith
               {visibleDots.map((ev) => (
                 <span
                   key={ev.id}
-                  className="h-1.5 w-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: getScheduleAccentColor(ev, events) }}
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${isToday ? 'bg-primary' : 'bg-toned'}`}
                 />
               ))}
               {hasOverflow && (
@@ -157,8 +152,8 @@ export function Calendar({ events, displayMonth, onDisplayMonthChange, onDayWith
                   type="button"
                   onClick={() => onDayWithEventsClick(date)}
                   aria-label={`${dayLabel}, ${count} event${count === 1 ? '' : 's'}. Show in list.`}
-                  className={`relative flex h-full w-full items-center justify-center rounded text-sm transition-colors hover:bg-muted/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
-                    isToday ? 'bg-muted font-semibold text-foreground' : 'text-muted-foreground'
+                  className={`relative flex h-full w-full items-center justify-center rounded text-sm transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
+                    isToday ? 'bg-primary-soft font-bold text-primary' : 'font-medium text-foreground'
                   }`}
                 >
                   {day}
@@ -167,7 +162,7 @@ export function Calendar({ events, displayMonth, onDisplayMonthChange, onDayWith
               ) : (
                 <div
                   className={`relative flex h-full items-center justify-center rounded text-sm ${
-                    isToday ? 'bg-muted font-semibold text-foreground' : 'text-muted-foreground'
+                    isToday ? 'bg-primary-soft font-bold text-primary' : 'text-dimmed'
                   }`}
                 >
                   {day}

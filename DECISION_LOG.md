@@ -1,5 +1,29 @@
 # Decision Log
 
+## 2026-11-20 - Rebrand to Good Company and move to calendar.goodcompanyva.org
+
+### Context
+1717 Collective is now Good Company. The calendar still carried 1717 page titles, preview tags, a canonical URL on `1717collective.org` and a "17/17" tab icon, and its look (cream wave background, amber/cyan accents, near-black buttons) did not match goodcompanyva.org. The calendar is moving to `calendar.goodcompanyva.org`; on 2026-11-20 both that host and `calendar.goodcompanyrva.org` already served this app from Railway, and the "Upcoming Events" button on goodcompanyva.org still linked to the `rva` host.
+
+### Decision
+- **URLs:** `index.html` title, description, Open Graph/Twitter tags and canonical point at `https://calendar.goodcompanyva.org/` and Good Company's existing `og-image.png`. `server.ts` sends `calendar.goodcompanyrva.org` and `calendar.1717collective.org` to the new host (301 for GET/HEAD, 308 otherwise), keeping path and query (`api/_lib/canonicalHost.ts`). Only listed hosts redirect, so Railway's own domain and health checks are untouched.
+- **Brand tokens:** `globals.css` uses goodcompanyva.org's light palette (mint page, ink text, `#7d3cff` purple primary) with IBM Plex Sans headlines and Inter body text from Google Fonts. The dead Tailwind v4 `@theme` block and the wave background are gone.
+- **Agenda by day replaces the striped cards.** The colored left stripe read as generic AI-generated UI, and its color carried no meaning (a position-based rotation). `groupEventsByMonthAndDay` (`src/utils/agendaGroups.ts`) groups the already ordered, already search-filtered list by Eastern day; `AgendaDay` shows each day once (weekday, large light numeral, month; "Today" in purple) beside its events as ruled rows, borrowing the hairline list on goodcompanyva.org. Search is unchanged: `App` filters first, so only days with a match appear. Calendar dots are one color (ink, purple on today), and `scheduleAccent`, `ScheduleEventCard` and `EventPromoImage` are gone. Images are square thumbnails that remove themselves when the host blocks them.
+- **Month sync:** the list now reports the month whose section holds its top edge, instead of the nearest month heading in either direction. The old rule flipped the calendar to December after jumping to November 30.
+- **Header** mirrors the site: stacked GOOD/COMPANY wordmark linking home, a "Start Navigating" button to `/needs`, and the title with "Events" in purple. (A "Greater Richmond Area" label above the title was dropped as a repeat of the title.) It replaces the "Provided by" credit, so `PROVIDER_CREDIT` became `GOOD_COMPANY`.
+- **Icons:** `public/` carries goodcompanyva.org's own icon set, copied as-is (SVG, 96px PNG, ICO, Apple touch icon, 192/512 app icons), linked the same way. `site.webmanifest` keeps the site's icons and colors but names the app "Good Company Events" with `start_url: "/"`, so an installed shortcut opens the calendar. `server.ts` serves `.webmanifest` as `application/manifest+json`.
+- **Link previews:** `public/og-image.png` (1200×630) is the main site's preview card with calendar copy: same pill, wordmark, colors and IBM Plex type, measured to within 1–2px of goodcompanyva.org's card, with the tagline "Upcoming business events across Greater Richmond, all in one calendar." and the label "EVENT CALENDAR". It is self-hosted at `https://calendar.goodcompanyva.org/og-image.png`, with width, height, type and alt tags. `src/indexHtml.test.ts` guards the tags and checks every linked icon exists.
+- Tailwind 3 cannot apply `/opacity` modifiers to colors defined as `var(...)`, so hovers use `opacity-*` and a `primary-soft` token instead.
+
+### Tradeoffs
+- Light theme only for now; goodcompanyva.org opens in dark mode with a toggle.
+- Copied icons won't follow future changes to goodcompanyva.org's icons; re-copy them if the mark changes.
+- The page's `theme-color` stays mint (`#edf5f5`) to match the calendar page; the main site uses deep teal because it opens in dark mode.
+- Event images shrink to thumbnails; flyers with text get cropped at that size. Descriptions are clamped to two lines (they stay, because search matches them).
+- Day groups are keyed by Eastern day, while calendar-click anchors still use the viewer's local day (as before); the two agree for Eastern viewers.
+- The weekly email and the subscribe/unsubscribe pages live in n8n and are updated there, not in this repo.
+
+---
 ## 2026-11-16 - Show a midnight Start Date as all day
 
 ### Context
